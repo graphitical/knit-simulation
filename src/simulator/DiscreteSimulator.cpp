@@ -381,26 +381,15 @@ const file_format::YarnRepr& DiscreteSimulator::getYarns() {
   return BaseSimulator::getYarns();
 }
 
-void DiscreteSimulator::setUpConstraints() {
-  // Length Constraints
-  if (params.enableLengthConstrain) {
-    for (const auto& yarn : yarns.yarns) {
-      for (size_t i = yarn.begin; i < yarn.end - 1; i++) {
-        addSegmentLengthConstraint(i);
-      }
+void DiscreteSimulator::setUpLengthConstraints() {
+  if (!params.enableLengthConstrain)
+    return;
+
+  for (const auto& yarn : yarns.yarns) {
+    for (size_t i = yarn.begin; i < yarn.end - 1; i++) {
+      addSegmentLengthConstraint(i);
     }
   }
-
-  // TODO: remove hard-coded pin
-  // std::vector<int> pins = { 1203,
-  //   1195, 1179, 1183, 1169, 1165, 1151, 1155, 1137, 1141, 1123, 1127, 1109, 1113, 1095, 1099,
-  //   1089, 1024, 798, 578, 382, 210, 62,
-  //   909, 687, 479, 295, 135, 0, 1, 10,
-  //   12, 24, 36, 48 };
-
-  // for (auto i : pins) {
-  //   addPinConstraint(i, pointAt(Q, i));
-  // }
 }
 
 }  // namespace Simulator

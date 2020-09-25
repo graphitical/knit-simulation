@@ -13,3 +13,6 @@
 [submodule "third_party/cxxopts"]
 	path = third_party/cxxopts
 	url = git@github.com:jarro2783/cxxopts.git
+[submodule "third_party/nlohmann_json_cmake_fetchcontent"]
+	path = third_party/nlohmann_json
+	url = git@github.com:ArthurSonzogni/nlohmann_json_cmake_fetchcontent.git

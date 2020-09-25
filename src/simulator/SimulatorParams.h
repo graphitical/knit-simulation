@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 namespace simulator {
 
 // SimulatorParams contains all parameters for Simulator
@@ -12,6 +14,8 @@ struct SimulatorParams {
   bool enableGround = false;
   // Enable length constrain;
   bool enableLengthConstrain = true;
+  // File name for constraints file
+  std::string constraintFileName = "";
 
   double m = 0.006;
   double kLen = 10;

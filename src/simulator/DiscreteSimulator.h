@@ -61,7 +61,7 @@ protected:
   void postStep(const StateGetter& cancelled) override;
 
   // Set up constraints
-  void setUpConstraints() override;
+  void setUpLengthConstraints() override;
 
 private:
   // === Bending and twisting ===

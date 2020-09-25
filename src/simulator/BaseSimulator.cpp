@@ -77,10 +77,26 @@ void BaseSimulator::constructMassMatrix() {
   invM.setIdentity();
 }
 
+void BaseSimulator::setUpConstraints() {
+  // Set length constraints
+  setUpLengthConstraints();
+
+  // Set pinned constraints
+  for (auto constrainForYarn : constraintsFile.constraints) {
+    int yarnID = constrainForYarn.yarnID;
+    for (auto pinnedPoint : constrainForYarn.pinnedPoints) {
+      int vertexID = yarns.yarns[yarnID].begin + pinnedPoint;
+      SPDLOG_INFO("pin:{}", vertexID);
+      addPinConstraintForPoint(vertexID, pointAt(Q, vertexID));
+    }
+  }
+}
+
 void BaseSimulator::initialize() {
   SPDLOG_INFO("Constructing Mass Matrix and Inverse");
   this->constructMassMatrix();
-  SPDLOG_INFO("Setting-up constraints");
+  SPDLOG_INFO("Setting-up constraints using \"{}\"", params.constraintFileName);
+  constraintsFile = file_format::YarnConstraints::read(params.constraintFileName);
   this->setUpConstraints();
 
   initializeContactForceMetaData();
@@ -675,7 +691,7 @@ void BaseSimulator::addCatmullRomLengthConstraint(size_t i) {
   constraints.addConstraint(f, fD);
 }
 
-void BaseSimulator::addPinConstraint(size_t i, Eigen::Vector3d point) {
+void BaseSimulator::addPinConstraintForPoint(size_t i, Eigen::Vector3d point) {
   for (int ax = 0; ax < 3; ax++) {
     Constraints::Func f = [=](const Eigen::MatrixXd& q)->double {
       return coordAt(q, i, ax) - point(ax);

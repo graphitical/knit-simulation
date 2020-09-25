@@ -38,7 +38,7 @@ public:
 protected:
   void constructMassMatrix() override;
   void stepImpl(const StateGetter& cancelled) override;
-  void setUpConstraints() override;
+  void setUpLengthConstraints() override;
 };
 
 } // namespace simulator

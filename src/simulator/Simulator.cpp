@@ -164,7 +164,10 @@ void Simulator::stepImpl(const StateGetter& cancelled) {
   Q += h * dQ + (h * h) * (invM * F);
 }
 
-void Simulator::setUpConstraints() {
+void Simulator::setUpLengthConstraints() {
+  if (!params.enableLengthConstrain)
+    return;
+
   for (const auto& yarn : yarns.yarns) {
     for (size_t i = yarn.begin; i < yarn.end - 3; i++) {
       addCatmullRomLengthConstraint(i);
@@ -182,8 +185,8 @@ void Simulator::setUpConstraints() {
   //   addPinConstraint(p, pointAt(Q, p));
   // }
 
-  addPinConstraint(0, pointAt(Q, 0));
-  addPinConstraint(nControlPoints - 1, pointAt(Q, nControlPoints - 1));
+  addPinConstraintForPoint(0, pointAt(Q, 0));
+  addPinConstraintForPoint(nControlPoints - 1, pointAt(Q, nControlPoints - 1));
 }
 
 }  // namespace simulator

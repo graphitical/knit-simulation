@@ -1,9 +1,11 @@
-#include "./menu.h"
+#include <iostream>
+#include <string>
 
 #include <spdlog/spdlog.h>
 
-#include <iostream>
-#include <string>
+#include "./FilePicker.h"
+#include "./menu.h"
+
 
 constexpr int inputBoxWidth = 200;
 
@@ -213,6 +215,7 @@ void Menu::init(igl::opengl::glfw::Viewer* _viewer) {
       ImGui::Text("Constraint and Fast Projection");
       ImGui::InputDouble("Scale fator", &(params.cInit));
       ImGui::Checkbox("Enable length constrain", &(params.enableLengthConstrain));
+      filePicker("Constrain points", &(params.constraintFileName));
       ImGui::InputDouble("Target error", &(params.fastProjErrorCutoff));
       ImGui::InputInt("Max iterations", &(params.fastProjMaxIter), 1, 5);
 

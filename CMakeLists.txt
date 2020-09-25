@@ -92,6 +92,9 @@ include_directories(third_party/CTPL)
 # cxxopts
 include_directories(third_party/cxxopts/include)
 
+# json
+include_directories(third_party/nlohmann_json/include)
+
 # Linking
 add_executable(${PROJECT_NAME} ${SRCFILES})
 set_target_properties(${PROJECT_NAME} PROPERTIES INSTALL_RPATH "${EASY_PROFILER_DIR}/build/bin")

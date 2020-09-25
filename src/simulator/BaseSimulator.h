@@ -12,6 +12,7 @@
 #include <mutex>
 #include <atomic>
 
+#include "file_format/YarnConstraints.h"
 #include "file_format/yarnRepr.h"
 #include "./SimulatorParams.h"
 #include "./Constraints.h"
@@ -45,6 +46,7 @@ protected:
 
   // Position and meta-data
   file_format::YarnRepr yarns;
+  file_format::YarnConstraints constraintsFile;
 
   // Simulation parameters
   SimulatorParams params;
@@ -88,7 +90,8 @@ protected:
   virtual void constructMassMatrix();
 
   // Add desired constraints
-  virtual void setUpConstraints() = 0;
+  virtual void setUpConstraints();
+  virtual void setUpLengthConstraints() = 0;
 
   // Call virtual initialization methods.
   // Must be called in derived class constructor.
@@ -181,7 +184,7 @@ protected:
   // Add length constraint of Catmull-Rom segment defined by points i to i + 3.
   void addCatmullRomLengthConstraint(size_t i);
   // Add pin constraint of point i to a fixed position
-  void addPinConstraint(size_t i, Eigen::Vector3d position);
+  void addPinConstraintForPoint(size_t i, Eigen::Vector3d position);
 
   ///////////////////////
   // Statistics
