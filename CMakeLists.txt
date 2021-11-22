@@ -7,7 +7,9 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
-set (CMAKE_CXX_STANDARD 17)
+add_definitions (-DCMAKE_OSX_ARCHITECTURES=arm64)
+
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include_directories("./src/")
@@ -40,15 +42,17 @@ else()
 endif()
 
 # Link libraries
-set(LINK_LIBS igl::core igl::opengl_glfw igl::opengl_glfw_imgui)
+set(LINK_LIBS igl::core igl::png igl::opengl_glfw igl::opengl_glfw_imgui)
 if (NOT MSVC)
-    list(APPEND LINK_LIBS stdc++fs)
+  find_package(Filesystem REQUIRED COMPONENTS Final)
+  list(APPEND LINK_LIBS std::filesystem)
 endif()
 
 # spdlog
 include_directories("./third_party/spdlog/include/")
 
 # libigl
+option(LIBIGL_WITH_PNG               "Use PNG"            ON)
 option(LIBIGL_WITH_OPENGL            "Use OpenGL"         ON)
 option(LIBIGL_WITH_OPENGL_GLFW       "Use GLFW"           ON)
 option(LIBIGL_WITH_OPENGL_GLFW_IMGUI "Use IMGUI"          ON)
@@ -64,11 +68,16 @@ add_definitions(${GLM_DEFINITIONS})
 # Easy Profiler
 set(ENABLE_EASY_PROFILER TRUE)
 if (ENABLE_EASY_PROFILER)
-    add_definitions(-DUSE_EASY_PROFILER)
-    set(EASY_PROFILER_DIR "${PROJECT_SOURCE_DIR}/../easy-profiler") # change this to easy-profiler-dir
-    message(STATUS "Using easy-profiler from ${EASY_PROFILER_DIR}")
+  add_definitions(-DUSE_EASY_PROFILER)
+  set(EASY_PROFILER_DIR "${PROJECT_SOURCE_DIR}/../easy_profiler-2.1.0") # change this to easy-profiler-dir
+  message(STATUS "Using easy-profiler from ${EASY_PROFILER_DIR}")
 	list(APPEND CMAKE_PREFIX_PATH "${EASY_PROFILER_DIR}/lib/cmake/easy_profiler")
-    list(APPEND LINK_LIBS easy_profiler)
+  list(APPEND LINK_LIBS easy_profiler)
+  set(CMAKE_MACOSX_RPATH ON)
+  set(CMAKE_SKIP_BUILD_RPATH TRUE)
+  set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+  set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+  set(CMAKE_INSTALL_RPATH "${EASY_PROFILER_DIR}/build/bin")
 	find_package(easy_profiler REQUIRED)
 endif()
 
@@ -85,6 +94,7 @@ include_directories(third_party/cxxopts/include)
 
 # Linking
 add_executable(${PROJECT_NAME} ${SRCFILES})
+set_target_properties(${PROJECT_NAME} PROPERTIES INSTALL_RPATH "${EASY_PROFILER_DIR}/build/bin")
 target_link_libraries(${PROJECT_NAME} ${LINK_LIBS})
 
 # Copy easy_profiler.dll to binary folder

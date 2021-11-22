@@ -3,6 +3,7 @@
 #include <spdlog/spdlog.h>
 
 #include "ui/viewer.h"
+#include "ui/knitpurlExplorer.h"
 
 int main(int argc, const char* argv[]) {
   spdlog::set_pattern("[%b %d %Y %H:%M:%S] %^[%l] %v %$ [%s:%#]");
@@ -13,6 +14,8 @@ int main(int argc, const char* argv[]) {
     "A program that simulates yarn interactions");
 
   options.add_options()
+    ("e,explorer", "Branch to the knitpurl explorer UI",
+      cxxopts::value<bool>()->default_value("false"))
     ("r,restore", "Restore the history from the output directory",
       cxxopts::value<bool>()->default_value("false"))
     ("no-gui", "Don't show GUI",
@@ -41,16 +44,24 @@ int main(int argc, const char* argv[]) {
       spdlog::set_level(spdlog::level::err);
     }
 
-    // Launch viewer
-    UI::Viewer viewer(option["output-dir"].as<std::string>(),
-      option["restore"].as<bool>());
-    viewer.loadYarn(option["file-name"].as<std::string>());
-
-    if (option["no-gui"].as<bool>()) {
-      viewer.launchNoGUI();
-    }
-    else {
+    if (option["explorer"].as<bool>()) {
+      // Launch knitpurl explorer
+      igl::opengl::glfw::Viewer viewer;
+      UI::KnitpurlExplorer knitpurlExplorer;
+      viewer.plugins.push_back(&knitpurlExplorer);
       viewer.launch();
+    } else {
+      // Launch viewer
+      UI::Viewer viewer(option["output-dir"].as<std::string>(),
+        option["restore"].as<bool>());
+      viewer.loadYarn(option["file-name"].as<std::string>());
+
+      if (option["no-gui"].as<bool>()) {
+        viewer.launchNoGUI();
+      }
+      else {
+        viewer.launch();
+      }
     }
   }
   catch (cxxopts::OptionException& e) {
@@ -65,4 +76,4 @@ int main(int argc, const char* argv[]) {
 
   SPDLOG_INFO("Application finished");
   return 0;
-}
+};

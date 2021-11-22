@@ -175,15 +175,15 @@ void Simulator::setUpConstraints() {
   }
 
   // std::vector<int> pin = {
-    // 159, 171, 183, 195
+  //   159, 171, 183, 195
   // };
 
   // for (int p : pin) {
-    // addPinConstraint(p, pointAt(Q, p));
+  //   addPinConstraint(p, pointAt(Q, p));
   // }
 
-  //addPinConstraint(0, pointAt(Q, 0));
-  //addPinConstraint(m - 1, pointAt(Q, m - 1));
+  addPinConstraint(0, pointAt(Q, 0));
+  addPinConstraint(nControlPoints - 1, pointAt(Q, nControlPoints - 1));
 }
 
 }  // namespace simulator

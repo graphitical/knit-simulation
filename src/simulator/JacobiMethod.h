@@ -7,6 +7,8 @@
 
 #include "./Helper.h"
 
+double epsilon = 1e-6;
+
 namespace simulator {
 
 void symmeticSchur(const Eigen::Matrix3d &A, int p, int q, double *c, double *s) {
@@ -53,7 +55,7 @@ void cyclicJacobi(Eigen::Matrix3d *A, Eigen::Matrix3d *V, int iterations) {
 // this function sets $A = X^{-1/2}$
 void inverseSquareRoot(Eigen::Matrix3d *A, const Eigen::Matrix3d &V) {
   for (int k = 0; k < A->rows(); k++) {
-    (*A)(k, k) = 1.0 / std::sqrt(std::abs((*A)(k, k)));
+    (*A)(k, k) = 1.0 / std::sqrt(std::abs((*A)(k, k)) + epsilon);
   }
   *A = V * (*A) * V.transpose();
 }

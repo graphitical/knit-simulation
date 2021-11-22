@@ -40,3 +40,4 @@ build/*
 /easy_profiler
 /CMakeSettings.json
 *.csv
+.DS_Store
