@@ -37,6 +37,7 @@ public:
     void releasehook();
     void outhook();
     void caston(int n);
+    void xfer(int needle);
     void tuck(std::string dir, int needle);
     void knit(std::string dir, std::string bed, int needle);
     void knit_row(std::vector<int> row, std::string dir);
@@ -58,6 +59,7 @@ private:
     std::vector<std::string> texture_names{};
     int current_texture = 0;
     bool knitting_textures_loaded = false;
+    bool swatch_generated = false;
 };
 
 }

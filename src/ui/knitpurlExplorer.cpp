@@ -33,8 +33,8 @@ void KnitpurlExplorer::draw_viewer_menu() {
     // float p = ImGui::GetStyle().FramePadding.x;
 
     if (ImGui::CollapsingHeader("Swatch Options", ImGuiTreeNodeFlags_DefaultOpen)) {
-        ImGui::DragInt("Swatch Width", &swatch_width, 4, 1, 12);
-        ImGui::DragInt("Swatch Height", &swatch_height, 4, 1, 12);
+        if (ImGui::DragInt("Swatch Width", &swatch_width, 4, 1, 12)) { swatch_generated = false; };
+        if (ImGui::DragInt("Swatch Height", &swatch_height, 4, 1, 12)) { swatch_generated = false;};
         ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(
             (float)textures[current_texture].color(0),
             (float)textures[current_texture].color(1),
@@ -51,6 +51,7 @@ void KnitpurlExplorer::draw_viewer_menu() {
                     swatch[i][j] = (int) (textures[current_texture].pattern(i % nr, j % nc));
                 }
             }
+            swatch_generated = true;
         }
         if (ImGui::Button("Save Swatch to .yarns", ImVec2(-1, 0))) {
             yarns_file = igl::file_dialog_open();
@@ -71,7 +72,7 @@ void KnitpurlExplorer::swatch_to_knitout() {
     caston(swatch_width);
     releasehook();
     for (int i = 0; i < swatch_height; i++) {
-        knit_row(swatch[i], (i % 2 == 0 ? "-" : "+"));
+        knit_row(swatch[i], (i % 2 == 0 ? "+" : "-"));
     }
     outhook();
     for (auto line : lines) {
@@ -95,20 +96,21 @@ void KnitpurlExplorer::smobj_to_yarns() {
 
 void KnitpurlExplorer::draw_custom_window() {
     // Define next window position + size
-    if (swatch.empty()) { return; }
-    ImGui::SetNextWindowPos(ImVec2(180.f * menu_scaling(), 10), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize(ImVec2((swatch_height + 1) * 92.f, (swatch_width + 1) * 92.f), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowPos(ImVec2(180.f * menu_scaling(), 0.f), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2((swatch_width + 1) * 40.f, (swatch_height + 1) * 40.f + 10.f), ImGuiCond_Always);
     ImGui::Begin("Swatch", nullptr, ImGuiWindowFlags_NoSavedSettings);
-    for (int i = 0; i < swatch_height; i++) {
-        ImGui::NewLine();
-        for (int j = 0; j < swatch_width; j++) {
-            ImGui::PushID(i * swatch_width + j);
-            int curr_tex = (swatch[i][j] == 0) ? knit_tex : purl_tex;
-            if (ImGui::ImageButton((void*)(intptr_t)curr_tex, ImVec2(92.f, 92.f))) {
-                swatch[i][j] = 1 - swatch[i][j];
+    if (swatch_generated) {
+        for (int i = 0; i < swatch_height; i++) {
+            ImGui::NewLine();
+            for (int j = 0; j < swatch_width; j++) {
+                ImGui::PushID(i * swatch_width + j);
+                int curr_tex = (swatch[i][j] == 0) ? knit_tex : purl_tex;
+                if (ImGui::ImageButton((void*)(intptr_t)curr_tex, ImVec2(30.f, 30.f))) {
+                    swatch[i][j] = 1 - swatch[i][j];
+                }
+                ImGui::PopID();
+                ImGui::SameLine();
             }
-            ImGui::PopID();
-            ImGui::SameLine();
         }
     }
     ImGui::End();
@@ -129,15 +131,15 @@ void KnitpurlExplorer::tuck(std::string dir, int needle) {
     
 void KnitpurlExplorer::caston(int n) {
     int needle = sn;
-    for (int i = 0; i < (int) (n / 2); i++) {
+    for (int i = 0; i < n; i++) { //(int) (n / 2)
         tuck("-", needle);
-        needle -= 2;
+        needle -= 1;
     }
-    needle = sn - n + 1;
-    for (int i = (int) (n / 2); i < n; i++) {
-        tuck("+", needle);
-        needle += 2;
-    }
+    // needle = sn - n + 1;
+    // for (int i = (int) (n / 2); i < n; i++) {
+    //     tuck("+", needle);
+    //     needle += 2;
+    // }
 }
 
 void KnitpurlExplorer::releasehook() {
@@ -145,7 +147,12 @@ void KnitpurlExplorer::releasehook() {
 }
 
 void KnitpurlExplorer::knit(std::string dir, std::string bed, int needle) {
-    lines.push_back("knit " + dir + " " + bed + std::to_string(needle) + " " + std::to_string(carrier));
+    std::string instr = bed == "f" ? "knit " : "purl ";
+    lines.push_back(instr + dir + " f" + std::to_string(needle) + " " + std::to_string(carrier));
+}
+
+void KnitpurlExplorer::xfer(int needle) {
+    lines.push_back("xfer b" + std::to_string(needle) + " f" + std::to_string(needle));
 }
 
 void KnitpurlExplorer::knit_row(std::vector<int> row, std::string dir) {
@@ -153,6 +160,9 @@ void KnitpurlExplorer::knit_row(std::vector<int> row, std::string dir) {
     int needle = dir == "-" ? sn : sn - n + 1;
     for (int i = 0; i < n; i++) {
         knit(dir, (row[i] == 0 ? "f" : "b"), needle);
+        // if (row[i] != 0) {
+        //     xfer(needle);
+        // }
         needle = dir == "+" ? needle + 1 : needle - 1;
     }
 }
