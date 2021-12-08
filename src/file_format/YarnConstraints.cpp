@@ -37,11 +37,25 @@ YarnConstraints YarnConstraints::read(std::string filename) {
       }
       constraint.pinnedPoints.insert(pinPoint);
     }
-    auto pbcPairs = constraintForYarn["pbcPairs"];
-    for (auto it = pbcPairs.begin(); it != pbcPairs.end();) {
-      auto i = *it++;
-      auto j = *it++;
-      constraint.pbcPairs.push_back(pbcPair(i,j));
+    auto pbcXPairs = constraintForYarn["pbcXPairs"];
+    if (pbcXPairs.size() > 3) {
+      for (auto it = pbcXPairs.begin(); it != pbcXPairs.end();) {
+        auto i = *it++;
+        auto j = *it++;
+        constraint.pbcXPairs.push_back(pbcPair(i,j));
+      }
+    } else {
+      SPDLOG_WARN("Not enough points specified for pbcXPairs. None generated");
+    }
+    auto pbcYPairs = constraintForYarn["pbcYPairs"];
+    if (pbcYPairs.size() > 3) {
+      for (auto it = pbcYPairs.begin(); it != pbcYPairs.end();) {
+        auto i = *it++;
+        auto j = *it++;
+        constraint.pbcYPairs.push_back(pbcPair(i,j));
+      }
+    } else {
+      SPDLOG_WARN("Not enough points specified for pbcXPairs. None generated");
     }
 
     result.constraints.push_back(constraint);

@@ -87,27 +87,50 @@ void BaseSimulator::setUpConstraints() {
     int yarnID = constrainForYarn.yarnID;
     for (auto pinnedPoint : constrainForYarn.pinnedPoints) {
       int vertexID = yarns.yarns[yarnID].begin + pinnedPoint;
-      SPDLOG_INFO("pin:{}", vertexID);
+      SPDLOG_INFO("Pin Constraint: {}", vertexID);
       addPinConstraintForPoint(vertexID, pointAt(Q, vertexID));
     }
 
     // Set PBC pair constraints
     bool first = true;
     size_t r0, r1;
-    for (auto pbcPair : constrainForYarn.pbcPairs) {
+    for (auto pbcXPair : constrainForYarn.pbcXPairs) {
       // First pair is our reference pair
-      // We pin the first point of the reference and save the indices for later
       if (first) { 
-        r0 = yarns.yarns[yarnID].begin + pbcPair.first;
+        // We pin the first point of the reference to prevent rigid body motion
+        r0 = yarns.yarns[yarnID].begin + pbcXPair.first;
         addPinConstraintForPoint(r0, pointAt(Q, r0));
-        r1 = yarns.yarns[yarnID].begin + pbcPair.second;
+        r1 = yarns.yarns[yarnID].begin + pbcXPair.second;
+        // addPinConstraintForPoint(r1, pointAt(Q, r1) + 0.05 * (pointAt(Q, r1) - pointAt(Q, r0))); // adding some strain
+        addAxesConstraintForPoint(r1, "z", pointAt(Q, r1));
         first = false;
         continue;
       }
-      size_t idx0 = yarns.yarns[yarnID].begin + pbcPair.first;
-      size_t idx1 = yarns.yarns[yarnID].begin + pbcPair.second;
-      SPDLOG_INFO("pbc pair: {}<->{} | reference: {}<->{}", idx0, idx1, r0, r1);
+      size_t idx0 = yarns.yarns[yarnID].begin + pbcXPair.first;
+      size_t idx1 = yarns.yarns[yarnID].begin + pbcXPair.second;
+      SPDLOG_INFO("PBC X pair: ({}, {}) referenceed to  ({}, {})", idx0, idx1, r0, r1);
+      // Link PBC control points together
       addPBCPair(idx0, idx1, r0, r1);
+      // Restrict primary control point to only be free along y axis/
+      // This preserves the affine nature of the PBC
+      addAxesConstraintForPoint(idx0, "xz", pointAt(Q, idx0));
+    }
+    // All comments above apply here with X --> Y
+    first = true;
+    for (auto pbcYPair : constrainForYarn.pbcYPairs) {
+      if (first) { 
+        r0 = yarns.yarns[yarnID].begin + pbcYPair.first;
+        addPinConstraintForPoint(r0, pointAt(Q, r0));
+        r1 = yarns.yarns[yarnID].begin + pbcYPair.second;
+        addAxesConstraintForPoint(r1, "z", pointAt(Q, r1));
+        first = false;
+        continue;
+      }
+      size_t idx0 = yarns.yarns[yarnID].begin + pbcYPair.first;
+      size_t idx1 = yarns.yarns[yarnID].begin + pbcYPair.second;
+      SPDLOG_INFO("PBC Y pair: ({}, {}) referenceed to  ({}, {})", idx0, idx1, r0, r1);
+      addPBCPair(idx0, idx1, r0, r1);
+      addAxesConstraintForPoint(idx0, "yz", pointAt(Q, idx0));
     }
   }
 }
@@ -732,6 +755,32 @@ void BaseSimulator::addPinConstraintForPoint(size_t i, Eigen::Vector3d point) {
 
     constraints.addConstraint(f, fD, i, ConstraintType::POINT);
   }
+}
+
+void BaseSimulator::addAxesConstraintForPoint(size_t i, const char* cA, Eigen::Vector3d point) {
+  std::vector<int> axes;
+  std::string a(cA);
+  auto np = std::string::npos;
+  if (a.find('x') != np || a.find('X') != np) axes.push_back(0);
+  if (a.find('y') != np || a.find('Y') != np) axes.push_back(1);
+  if (a.find('z') != np || a.find('Z') != np) axes.push_back(2);
+  if (axes.empty()) SPDLOG_WARN("No X/Y/Z axes specified in axes constraint for control point {}", i);
+
+  for (int ax : axes) {
+    Constraints::Func f = [=](const Eigen::MatrixXd& q)->double {
+      return coordAt(q, i, ax) - point(ax);
+    };
+
+    Constraints::JacobianFunc fD = [=](const Eigen::MatrixXd& q, const Constraints::Referrer& ref) {
+      EIGEN_UNUSED_VARIABLE(q)
+
+      ref(i, ax) += 1;
+    };
+
+    constraints.addConstraint(f, fD, i, ConstraintType::AXES);
+  }
+
+
 }
 
 void BaseSimulator::addPBCPair(size_t i, size_t j, size_t a, size_t b) {

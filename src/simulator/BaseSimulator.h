@@ -190,6 +190,8 @@ protected:
   void addCatmullRomLengthConstraint(size_t i);
   // Add pin constraint of point i to a fixed position
   void addPinConstraintForPoint(size_t i, Eigen::Vector3d position);
+  // Add specific axes constraint
+  void addAxesConstraintForPoint(size_t i, const char* axes, Eigen::Vector3d position);
   // Add periodic boundary constraints (PBCs) where a pair of indices (i, j) are held to be the same distance as pair (a, b)
   void addPBCPair(size_t i, size_t j, size_t a, size_t b);
 

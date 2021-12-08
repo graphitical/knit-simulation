@@ -125,7 +125,7 @@ void Viewer::refresh() {
     Eigen::MatrixXd P, C;
     visualizePointConstraints(yarns, constraints, P, C);
     this->data().set_points(P, C);
-    this->data().point_size = 12.f;
+    // this->data().point_size = 12.f;
   }
 
   for (size_t i = 0; i < yarns.yarns.size(); i++) {

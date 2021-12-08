@@ -16,6 +16,7 @@ namespace simulator {
 enum ConstraintType {
   UNDEF = 0,
   POINT,
+  AXES,
   LENGTH,
   PBC
 };
