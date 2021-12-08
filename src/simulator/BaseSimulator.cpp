@@ -83,27 +83,38 @@ void BaseSimulator::setUpConstraints() {
   setUpLengthConstraints();
 
   // Set pinned constraints
-  for (auto constrainForYarn : constraintsFile.constraints) {
+  for (const auto& constrainForYarn : constraintsFile.constraints) {
     int yarnID = constrainForYarn.yarnID;
-    for (auto pinnedPoint : constrainForYarn.pinnedPoints) {
+    auto& pinnedPoints = constrainForYarn.pinnedPoints;
+    auto& pbcXPairs = constrainForYarn.pbcXPairs;
+    auto& pbcYPairs = constrainForYarn.pbcYPairs;
+
+    for (const auto& pinnedPoint : pinnedPoints) {
       int vertexID = yarns.yarns[yarnID].begin + pinnedPoint;
       SPDLOG_INFO("Pin Constraint: {}", vertexID);
       addPinConstraintForPoint(vertexID, pointAt(Q, vertexID));
     }
 
     // Set PBC pair constraints
-    bool first = true;
+    bool firstPair = true;
     size_t r0, r1;
-    for (auto pbcXPair : constrainForYarn.pbcXPairs) {
+    for (const auto& pbcXPair : pbcXPairs) {
       // First pair is our reference pair
-      if (first) { 
-        // We pin the first point of the reference to prevent rigid body motion
+      if (firstPair) { 
+        // We restrict the motion of the reference pairs to only the XY plane
         r0 = yarns.yarns[yarnID].begin + pbcXPair.first;
-        addPinConstraintForPoint(r0, pointAt(Q, r0));
+        addAxesConstraintForPoint(r0, "z", pointAt(Q, r0));
         r1 = yarns.yarns[yarnID].begin + pbcXPair.second;
-        // addPinConstraintForPoint(r1, pointAt(Q, r1) + 0.05 * (pointAt(Q, r1) - pointAt(Q, r0))); // adding some strain
         addAxesConstraintForPoint(r1, "z", pointAt(Q, r1));
-        first = false;
+
+        // We check to see if the primary reference point is pinned.
+        // We need some pinned points to prevent rigid body motion and
+        //   it is best practice to just make that the primary PBC reference point
+        if (std::find(pinnedPoints.begin(), pinnedPoints.end(), r0) == pinnedPoints.end()) {
+          SPDLOG_WARN("Primary reference point for PBC X pairs is not pinned. This may cause issues with rigid body motion.");
+        }
+
+        firstPair = false;
         continue;
       }
       size_t idx0 = yarns.yarns[yarnID].begin + pbcXPair.first;
@@ -116,14 +127,19 @@ void BaseSimulator::setUpConstraints() {
       addAxesConstraintForPoint(idx0, "xz", pointAt(Q, idx0));
     }
     // All comments above apply here with X --> Y
-    first = true;
-    for (auto pbcYPair : constrainForYarn.pbcYPairs) {
-      if (first) { 
+    firstPair = true;
+    for (const auto& pbcYPair : pbcYPairs) {
+      if (firstPair) { 
         r0 = yarns.yarns[yarnID].begin + pbcYPair.first;
-        addPinConstraintForPoint(r0, pointAt(Q, r0));
+        addAxesConstraintForPoint(r0, "z", pointAt(Q, r0));
         r1 = yarns.yarns[yarnID].begin + pbcYPair.second;
         addAxesConstraintForPoint(r1, "z", pointAt(Q, r1));
-        first = false;
+
+        if (std::find(pinnedPoints.begin(), pinnedPoints.end(), r0) == pinnedPoints.end()) {
+          SPDLOG_WARN("Primary reference point for PBC Y pairs is not pinned. This may cause issues with rigid body motion.");
+        }
+
+        firstPair = false;
         continue;
       }
       size_t idx0 = yarns.yarns[yarnID].begin + pbcYPair.first;
@@ -131,6 +147,11 @@ void BaseSimulator::setUpConstraints() {
       SPDLOG_INFO("PBC Y pair: ({}, {}) referenceed to  ({}, {})", idx0, idx1, r0, r1);
       addPBCPair(idx0, idx1, r0, r1);
       addAxesConstraintForPoint(idx0, "yz", pointAt(Q, idx0));
+    }
+
+    if (constrainForYarn.pinnedPoints.size() == 0 && (constrainForYarn.pbcXPairs.size() != 0 || constrainForYarn.pbcYPairs.size() !=0 ) ) {
+      SPDLOG_WARN("PBC specified but no pinned constraints were provided for yarn id {}. "
+        "This could result in rigid body motion.", yarnID);
     }
   }
 }
