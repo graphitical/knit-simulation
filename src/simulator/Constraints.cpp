@@ -11,8 +11,8 @@ void Constraints::addConstraint(Func f, JacobianFunc fD) {
   constraints.push_back(Entry{f, fD, IndexPair(-1, -1), ConstraintType::UNDEF});
 }
 
-void Constraints::addConstraint(Func f, JacobianFunc fD, IndexPair indexes, ConstraintType type) {
-  constraints.push_back(Entry{f, fD, indexes, type});
+void Constraints::addConstraint(Func f, JacobianFunc fD, size_t index_1, size_t index_2, ConstraintType type) {
+  constraints.push_back(Entry{f, fD, IndexPair(index_1, index_2), type});
 }
 
 void Constraints::addConstraint(Func f, JacobianFunc fD, size_t index, ConstraintType type) {

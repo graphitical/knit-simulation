@@ -14,6 +14,9 @@ class YarnConstraints {
     int yarnID;
     // A list of control point indices where the control points should be pinned
     std::set<int> pinnedPoints;
+
+    // PBC
+    std::vector< std::pair<size_t, size_t> > pbcPairs;
   };
   std::vector<ConstraintsForYarn> constraints;
 

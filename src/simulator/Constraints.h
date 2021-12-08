@@ -44,7 +44,7 @@ public:
   void addConstraint(Func f, JacobianFunc fD);
   // indexes: first is the index of the constraint, second is the index of a PBC constraint if it has one
   // Also tracks type
-  void addConstraint(Func f, JacobianFunc fD, IndexPair indexes, ConstraintType type);
+  void addConstraint(Func f, JacobianFunc fD, size_t index_1, size_t index_2, ConstraintType type);
   void addConstraint(Func f, JacobianFunc fD, size_t index, ConstraintType type);
 
   // Gets Jacobian matrix of size c x (3 * m)

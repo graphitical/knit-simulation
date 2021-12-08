@@ -101,7 +101,7 @@ class Viewer : igl::opengl::glfw::Viewer {
   void visualizeMaterialAndBishopFrames(const file_format::YarnRepr &yarnRepr,
     Eigen::MatrixX3d *V, Eigen::MatrixX2i *E, Eigen::MatrixX3f *C);
   
-  void visualizePinnedConstraints(const file_format::YarnRepr& yarnRepr,
+  void visualizePointConstraints(const file_format::YarnRepr& yarnRepr,
     const simulator::Constraints& constraints, Eigen::MatrixXd& P, Eigen::MatrixXd& C);
 };
 

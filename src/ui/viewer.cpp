@@ -123,11 +123,9 @@ void Viewer::refresh() {
   if (showConstraints) {
 
     Eigen::MatrixXd P, C;
-    visualizePinnedConstraints(yarns, constraints, P, C);
-
+    visualizePointConstraints(yarns, constraints, P, C);
     this->data().set_points(P, C);
     this->data().point_size = 12.f;
-
   }
 
   for (size_t i = 0; i < yarns.yarns.size(); i++) {
@@ -357,19 +355,33 @@ void Viewer::visualizeMaterialAndBishopFrames(const file_format::YarnRepr& yarnR
     C->row(i) = c[i].transpose();
 }
 
-void Viewer::visualizePinnedConstraints(const file_format::YarnRepr& yarnRepr, 
+void Viewer::visualizePointConstraints(const file_format::YarnRepr& yarnRepr, 
   const simulator::Constraints& constraints, Eigen::MatrixXd& P, Eigen::MatrixXd& C) {
 
   const Eigen::MatrixXd& Q = yarnRepr.vertices;
   std::set<int> track;
   std::vector<Eigen::RowVector3d> p;
+  std::vector<Eigen::RowVector3d> c;
 
   for (const auto& constraint : constraints.getConstraintList()) {
-    size_t idx = constraint.indexes.first;
-    if (std::find(track.begin(), track.end(), idx) != track.end()) continue;
+    size_t idx1 = constraint.indexes.first;
+    size_t idx2 = constraint.indexes.second;
+
+    if (std::find(track.begin(), track.end(), idx1) != track.end()) continue;
+
     if (constraint.type == simulator::ConstraintType::POINT) {
-      p.push_back(Q.row(idx));
-      track.insert(idx);
+      p.push_back(Q.row(idx1));
+      c.push_back(Eigen::RowVector3d::Ones() * 0.6);
+      track.insert(idx1);
+    }
+
+    if (constraint.type == simulator::ConstraintType::PBC) {
+      p.push_back(Q.row(idx1));
+      p.push_back(Q.row(idx2));
+      c.push_back(Eigen::RowVector3d(1., 24./255., 0.));
+      c.push_back(Eigen::RowVector3d(0., 217./255., 0.));
+      track.insert(idx1);
+      track.insert(idx2);
     }
   }
 
@@ -378,7 +390,8 @@ void Viewer::visualizePinnedConstraints(const file_format::YarnRepr& yarnRepr,
     P.row(i) = p[i];
   
   C.resize(p.size(), 3);
-  C.setConstant(0.6);
+  for (size_t i = 0; i < c.size(); ++i)
+    C.row(i) = c[i];
 }
 
 } // namespace UI

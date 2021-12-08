@@ -90,6 +90,25 @@ void BaseSimulator::setUpConstraints() {
       SPDLOG_INFO("pin:{}", vertexID);
       addPinConstraintForPoint(vertexID, pointAt(Q, vertexID));
     }
+
+    // Set PBC pair constraints
+    bool first = true;
+    size_t r0, r1;
+    for (auto pbcPair : constrainForYarn.pbcPairs) {
+      // First pair is our reference pair
+      // We pin the first point of the reference and save the indices for later
+      if (first) { 
+        r0 = yarns.yarns[yarnID].begin + pbcPair.first;
+        addPinConstraintForPoint(r0, pointAt(Q, r0));
+        r1 = yarns.yarns[yarnID].begin + pbcPair.second;
+        first = false;
+        continue;
+      }
+      size_t idx0 = yarns.yarns[yarnID].begin + pbcPair.first;
+      size_t idx1 = yarns.yarns[yarnID].begin + pbcPair.second;
+      SPDLOG_INFO("pbc pair: {}<->{} | reference: {}<->{}", idx0, idx1, r0, r1);
+      addPBCPair(idx0, idx1, r0, r1);
+    }
   }
 }
 
@@ -712,6 +731,26 @@ void BaseSimulator::addPinConstraintForPoint(size_t i, Eigen::Vector3d point) {
     };
 
     constraints.addConstraint(f, fD, i, ConstraintType::POINT);
+  }
+}
+
+void BaseSimulator::addPBCPair(size_t i, size_t j, size_t a, size_t b) {
+  for (int ax = 0; ax < 3; ax++) {
+    Constraints::Func f = [=](const Eigen::MatrixXd& q)->double {
+      // x_j - x_i - (x_b + x_a) = 0
+      return coordAt(q, j, ax) - coordAt(q, i, ax) - (coordAt(q, b, ax) - coordAt(q, a, ax));
+    };
+
+    Constraints::JacobianFunc fD = [=](const Eigen::MatrixXd& q, const Constraints::Referrer& ref) {
+      EIGEN_UNUSED_VARIABLE(q)
+
+      ref(j, ax) += 1;
+      ref(i, ax) -= 1;
+      ref(b, ax) -= 1;
+      ref(a, ax) += 1;
+    };
+
+    constraints.addConstraint(f, fD, i, j, ConstraintType::PBC);
   }
 }
 

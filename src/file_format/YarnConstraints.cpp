@@ -23,17 +23,25 @@ YarnConstraints YarnConstraints::read(std::string filename) {
     return result;
   }
 
+  typedef std::pair<size_t, size_t> pbcPair;
+
   // Parse file
   auto jsonContent = nlohmann::json::parse(std::istreambuf_iterator<char>(fin),
                                            std::istreambuf_iterator<char>());
-  for (auto constrainForYarn : jsonContent["constraints"]) {
+  for (auto constraintForYarn : jsonContent["constraints"]) {
     ConstraintsForYarn constraint;
-    constraint.yarnID = constrainForYarn["yarnID"];
-    for (int pinPoint : constrainForYarn["pinnedControlPoints"]) {
+    constraint.yarnID = constraintForYarn["yarnID"];
+    for (int pinPoint : constraintForYarn["pinnedControlPoints"]) {
       if (constraint.pinnedPoints.find(pinPoint) != constraint.pinnedPoints.end()) {
         SPDLOG_WARN("Duplicated pinned constraint for point {}", pinPoint);
       }
       constraint.pinnedPoints.insert(pinPoint);
+    }
+    auto pbcPairs = constraintForYarn["pbcPairs"];
+    for (auto it = pbcPairs.begin(); it != pbcPairs.end();) {
+      auto i = *it++;
+      auto j = *it++;
+      constraint.pbcPairs.push_back(pbcPair(i,j));
     }
 
     result.constraints.push_back(constraint);
