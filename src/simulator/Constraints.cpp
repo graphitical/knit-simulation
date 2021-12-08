@@ -8,8 +8,17 @@
 namespace simulator {
 
 void Constraints::addConstraint(Func f, JacobianFunc fD) {
-  constraints.push_back(Entry{ f, fD });
+  constraints.push_back(Entry{f, fD, IndexPair(-1, -1), ConstraintType::UNDEF});
 }
+
+void Constraints::addConstraint(Func f, JacobianFunc fD, IndexPair indexes, ConstraintType type) {
+  constraints.push_back(Entry{f, fD, indexes, type});
+}
+
+void Constraints::addConstraint(Func f, JacobianFunc fD, size_t index, ConstraintType type) {
+  constraints.push_back(Entry{f, fD, IndexPair(index, -1), type});
+}
+
 
 Eigen::SparseMatrix<double> Constraints::getJacobian(const Eigen::MatrixXd& q) const {
   EASY_FUNCTION();

@@ -66,7 +66,7 @@ link_directories(${GLM_LIBRARY_DIRS})
 add_definitions(${GLM_DEFINITIONS})
 
 # Easy Profiler
-set(ENABLE_EASY_PROFILER TRUE)
+set(ENABLE_EASY_PROFILER FALSE)
 if (ENABLE_EASY_PROFILER)
   add_definitions(-DUSE_EASY_PROFILER)
   set(EASY_PROFILER_DIR "${PROJECT_SOURCE_DIR}/../easy_profiler-2.1.0") # change this to easy-profiler-dir

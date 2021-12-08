@@ -19,7 +19,7 @@ YarnConstraints YarnConstraints::read(std::string filename) {
   std::ifstream fin(filename);
   if (!fin) {
     SPDLOG_WARN("Failed to open constraint file \"{}\". "
-      "Falling back to no constraints.");
+      "Falling back to no constraints.", filename);
     return result;
   }
 

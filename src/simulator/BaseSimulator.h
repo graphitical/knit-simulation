@@ -41,6 +41,7 @@ public:
 
   // TODO: Locks
   SimulatorParams getParams() const { return params; }
+  Constraints getConstraints() const { return constraints; }
 protected:
   ctpl::thread_pool thread_pool;
 

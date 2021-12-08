@@ -12,6 +12,7 @@
 
 #include "simulator/BaseSimulator.h"
 #include "simulator/Enum.h"
+#include "simulator/Constraints.h"
 #include "file_format/ViewerState.h"
 #include "./menu.h"
 #include "./HistoryManager.h"
@@ -26,6 +27,7 @@ class AnimationManager;
 enum ViewerLayerID {
   GROUND = 0,
   MATERIAL_FRAMES,
+  CONSTRAINTS,
   YARNS
 };
 
@@ -35,7 +37,7 @@ class Viewer : igl::opengl::glfw::Viewer {
   int launch(bool resizable = true, bool fullscreen = false,
     const std::string &name = "GRAIL Knit Simulator", int width = 0, int height = 0);
   void launchNoGUI();
-  void loadYarn(const std::string& filename);
+  void loadYarn(const std::string& filename, const std::string& constraintFileName = "");
   void saveYarn(const std::string& filename);
   void createSimulator();
 
@@ -69,6 +71,7 @@ class Viewer : igl::opengl::glfw::Viewer {
 
   bool showMaterialFrames = false;
   bool showBishopFrame = false;
+  bool showConstraints = true;
   Eigen::Vector3f materialFrameUColor = Eigen::Vector3f(211, 67, 67) / 255;
   Eigen::Vector3f materialFrameVColor = Eigen::Vector3f(243, 207, 68) / 255;
   Eigen::Vector3f bishopFrameUColor = Eigen::Vector3f(167, 104, 246) / 255;
@@ -97,6 +100,9 @@ class Viewer : igl::opengl::glfw::Viewer {
   // C: colors
   void visualizeMaterialAndBishopFrames(const file_format::YarnRepr &yarnRepr,
     Eigen::MatrixX3d *V, Eigen::MatrixX2i *E, Eigen::MatrixX3f *C);
+  
+  void visualizePinnedConstraints(const file_format::YarnRepr& yarnRepr,
+    const simulator::Constraints& constraints, Eigen::MatrixXd& P, Eigen::MatrixXd& C);
 };
 
 }  // namespace UI

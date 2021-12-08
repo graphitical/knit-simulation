@@ -650,7 +650,7 @@ void BaseSimulator::addSegmentLengthConstraint(size_t i) {
       ref(i + 1, ax) = diff(ax) / length / norm;
     }
   };
-  constraints.addConstraint(f, fD);
+  constraints.addConstraint(f, fD, i, ConstraintType::LENGTH);
 }
 
 void BaseSimulator::addCatmullRomLengthConstraint(size_t i) {
@@ -688,7 +688,7 @@ void BaseSimulator::addCatmullRomLengthConstraint(size_t i) {
       ref(i, ii) += res(ii);
     }
   };
-  constraints.addConstraint(f, fD);
+  constraints.addConstraint(f, fD, i, ConstraintType::LENGTH);
 }
 
 void BaseSimulator::addPinConstraintForPoint(size_t i, Eigen::Vector3d point) {
@@ -703,7 +703,7 @@ void BaseSimulator::addPinConstraintForPoint(size_t i, Eigen::Vector3d point) {
       ref(i, ax) += 1;
     };
 
-    constraints.addConstraint(f, fD);
+    constraints.addConstraint(f, fD, i, ConstraintType::POINT);
   }
 }
 

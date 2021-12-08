@@ -13,15 +13,25 @@
 
 namespace simulator {
 
+enum ConstraintType {
+  UNDEF = 0,
+  POINT,
+  LENGTH,
+  PBC
+};
+
 class Constraints {
 public:
   using Referrer = std::function<double& (int, int)>;
   using Func = std::function<double(const Eigen::MatrixXd&)>;
   using JacobianFunc = std::function<void(const Eigen::MatrixXd&, const Referrer&)>;
 
+  typedef std::pair<size_t, size_t> IndexPair;
   struct Entry {
     Func f;
     JacobianFunc fD;
+    IndexPair indexes;
+    ConstraintType type;
   };
 
   // Construct a constraint container with m control points.
@@ -32,6 +42,10 @@ public:
   // f: constrain function of q
   // fD: d(f)/d(q(index)) for every index with non-zero value
   void addConstraint(Func f, JacobianFunc fD);
+  // indexes: first is the index of the constraint, second is the index of a PBC constraint if it has one
+  // Also tracks type
+  void addConstraint(Func f, JacobianFunc fD, IndexPair indexes, ConstraintType type);
+  void addConstraint(Func f, JacobianFunc fD, size_t index, ConstraintType type);
 
   // Gets Jacobian matrix of size c x (3 * m)
   // where c is the number of constraints
@@ -41,6 +55,8 @@ public:
   // Evaluates the constraints at q
   // Returns the matrix of size c x 1
   Eigen::MatrixXd calculate(const Eigen::MatrixXd& q) const;
+
+  std::vector<Entry> getConstraintList() const { return constraints; }
 
 private:
   // number of control points

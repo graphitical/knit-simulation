@@ -22,6 +22,8 @@ int main(int argc, const char* argv[]) {
       cxxopts::value<bool>()->default_value("false"))
     ("o,output-dir", "The folder to store and load history",
       cxxopts::value<std::string>()->default_value("output/"))
+    ("c,constraint-file", "JSON file with constraint information",
+      cxxopts::value<std::string>()->default_value("test/"))
     ("v,verbose", "Show all logs",
       cxxopts::value<bool>()->default_value("false"))
     ("quiet", "Don't show any logs",
@@ -54,7 +56,7 @@ int main(int argc, const char* argv[]) {
       // Launch viewer
       UI::Viewer viewer(option["output-dir"].as<std::string>(),
         option["restore"].as<bool>());
-      viewer.loadYarn(option["file-name"].as<std::string>());
+      viewer.loadYarn(option["file-name"].as<std::string>(), option["constraint-file"].as<std::string>());
 
       if (option["no-gui"].as<bool>()) {
         viewer.launchNoGUI();
@@ -76,4 +78,4 @@ int main(int argc, const char* argv[]) {
 
   SPDLOG_INFO("Application finished");
   return 0;
-};
+}

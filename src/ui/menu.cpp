@@ -106,6 +106,8 @@ void Menu::init(igl::opengl::glfw::Viewer* _viewer) {
         needRefresh = true;
       if (ImGui::Checkbox("Show bishop frames", &(yarnViewer->showBishopFrame)))
         needRefresh = true;
+      if (ImGui::Checkbox("Show constraints", &(yarnViewer->showConstraints)))
+        needRefresh = true;
       ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.3f);
       ImGui::DragFloat("Shininess", &(viewer->data().shininess), 0.05f, 0.0f, 100.0f);
       if (ImGui::DragInt("Cross-section samples",

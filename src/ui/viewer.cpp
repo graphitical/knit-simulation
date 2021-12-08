@@ -11,6 +11,7 @@ namespace stdfs = std::filesystem;
 #include "simulator/Simulator.h"
 #include "simulator/DiscreteSimulator.h"
 #include "simulator/Helper.h"
+#include "simulator/Constraints.h"
 #include "./sweep.h"
 
 namespace UI {
@@ -76,6 +77,7 @@ void Viewer::refresh() {
   // Get yarn shape
   const file_format::YarnRepr yarns = _history->getFrame(_currentFrame);
   const simulator::SimulatorParams& params = _simulator->getParams();
+  const simulator::Constraints& constraints = _simulator->getConstraints();
 
   // Create Layers
   while (this->data_list.size() <= ViewerLayerID::YARNS + yarns.yarns.size()) {
@@ -113,6 +115,19 @@ void Viewer::refresh() {
     this->data().set_edges(V, E, C.cast<double>());
     this->data().show_lines = true;
     this->data().line_width = 5;
+  }
+
+  // Draw constraints
+  this->selected_data_index = ViewerLayerID::CONSTRAINTS;
+  this->data().clear();
+  if (showConstraints) {
+
+    Eigen::MatrixXd P, C;
+    visualizePinnedConstraints(yarns, constraints, P, C);
+
+    this->data().set_points(P, C);
+    this->data().point_size = 12.f;
+
   }
 
   for (size_t i = 0; i < yarns.yarns.size(); i++) {
@@ -191,7 +206,8 @@ void Viewer::createSimulator() {
   this->refresh();
 }
 
-void Viewer::loadYarn(const std::string& filename) {
+void Viewer::loadYarn(const std::string& filename, const std::string& constraintFileName) {
+  params.constraintFileName = constraintFileName;
   // Load .yarns file
   SPDLOG_INFO("Loading model: {}", filename);
   file_format::Yarns::Yarns yarns;
@@ -339,6 +355,30 @@ void Viewer::visualizeMaterialAndBishopFrames(const file_format::YarnRepr& yarnR
   C->resize(c.size(), 3);
   for (size_t i = 0; i < c.size(); i++)
     C->row(i) = c[i].transpose();
+}
+
+void Viewer::visualizePinnedConstraints(const file_format::YarnRepr& yarnRepr, 
+  const simulator::Constraints& constraints, Eigen::MatrixXd& P, Eigen::MatrixXd& C) {
+
+  const Eigen::MatrixXd& Q = yarnRepr.vertices;
+  std::set<int> track;
+  std::vector<Eigen::RowVector3d> p;
+
+  for (const auto& constraint : constraints.getConstraintList()) {
+    size_t idx = constraint.indexes.first;
+    if (std::find(track.begin(), track.end(), idx) != track.end()) continue;
+    if (constraint.type == simulator::ConstraintType::POINT) {
+      p.push_back(Q.row(idx));
+      track.insert(idx);
+    }
+  }
+
+  P.resize(p.size(), 3);
+  for (size_t i = 0; i < p.size(); ++i)
+    P.row(i) = p[i];
+  
+  C.resize(p.size(), 3);
+  C.setConstant(0.6);
 }
 
 } // namespace UI
