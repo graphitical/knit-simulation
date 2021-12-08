@@ -215,11 +215,12 @@ void Menu::init(igl::opengl::glfw::Viewer* _viewer) {
       ImGui::Separator();
 
       ImGui::Text("Constraint and Fast Projection");
-      ImGui::InputDouble("Scale fator", &(params.cInit));
+      ImGui::InputDouble("Scale factor", &(params.cInit));
       ImGui::Checkbox("Enable length constrain", &(params.enableLengthConstrain));
       filePicker("Constrain points", &(params.constraintFileName));
       ImGui::InputDouble("Target error", &(params.fastProjErrorCutoff));
       ImGui::InputInt("Max iterations", &(params.fastProjMaxIter), 1, 5);
+      ImGui::InputDouble("Residual tolerance", &(params.forceResidualTol));
 
       ImGui::Separator();
 

@@ -13,7 +13,8 @@ struct SimulatorParams {
   // Enable ground collision
   bool enableGround = false;
   // Enable length constrain;
-  bool enableLengthConstrain = true;
+  // bool enableLengthConstrain = true;
+  bool enableLengthConstrain = false;
   // File name for constraints file
   std::string constraintFileName = "";
 
@@ -28,7 +29,7 @@ struct SimulatorParams {
   // Twisting coefficient
   double kTwist = 0.05;
   // Global damping
-  double kGlobalDamping = 0.00001;
+  double kGlobalDamping = 0.0001;
   // Contact force coefficient
   double kContact = 3250;
   // Contact force damping
@@ -45,7 +46,7 @@ struct SimulatorParams {
   // Time delta for each step (time resolution)
   double h = 0.001;
   // Number of steps to run for each button click
-  int steps = 100;
+  int steps = 50;
   // Gravity acceleration
   double gravity = 0.0;
   // y coordinate of the ground
@@ -53,13 +54,16 @@ struct SimulatorParams {
   // Ground fiction
   double groundFriction = 0.5;
 
-  double cInit = 0.5;
+  double cInit = 0.3;
 
   // === Fast projection ===
   // maximum iteration
   int fastProjMaxIter = 20;
   // Early termination when error is small
   double fastProjErrorCutoff = 1e-5;
+
+  // Tolerance for global simulation cut off
+  double forceResidualTol = 1e-3;
 
   static SimulatorParams Default() {
     SimulatorParams param;
