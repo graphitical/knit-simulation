@@ -37,7 +37,8 @@ public:
   void setVelocity(const file_format::YarnRepr& yarn);
 
   // Simulates next timestep.
-  void step(const StateGetter& cancelled);
+  bool step(const StateGetter& cancelled);
+  bool isFinished() const { return _finished; }
 
   // TODO: Locks
   SimulatorParams getParams() const { return params; }
@@ -63,6 +64,7 @@ protected:
   // Force
   Eigen::MatrixXd F;
   mutable std::mutex lockF;
+  double forceResidual;
 
   // Acceleration can be derived from ddQ = invM * F
   // F = f - gradE - gradD
@@ -108,6 +110,8 @@ protected:
   // Called after all update is done
   virtual void postStep(const StateGetter& cancelled){
     EIGEN_UNUSED_VARIABLE(cancelled)}
+  
+  bool _finished = false;
 
 
   ///////////////////////
@@ -240,11 +244,15 @@ protected:
   // idea: only print the first occurance of NaN
   bool foundNaN = false;
   // If there's a NaN in `x`, print error message
+  #ifdef CHECKNANS
   #define checkNaN(x) \
     if (x.hasNaN() && !foundNaN) { \
       SPDLOG_ERROR("NaN found!"); \
       foundNaN = true; \
     }
+  #else
+  #define checkNaN(x)
+  #endif
 };
 
 } // namespace simulator

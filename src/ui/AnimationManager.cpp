@@ -81,6 +81,7 @@ void AnimationManager::runSimulation() {
   std::function<bool()> terminated = [this]()->bool { return isTerminated(); }; 
   char positionName[200];
   char velocityName[200];
+  bool stepOK = true;
   while (true) {
     std::unique_lock<std::mutex> lock(_statusLock);
     _statusChanged.wait(lock, [this]{return _terminate || _simulationRunning;});
@@ -93,9 +94,13 @@ void AnimationManager::runSimulation() {
 
     SPDLOG_INFO("Simulating Frame: {}", currentFrame);
 
-    _parent->simulator()->step(terminated);
+    stepOK = _parent->simulator()->step(terminated);
 
-    // Only save state if not terminated
+    if (!stepOK) {
+      SPDLOG_ERROR("> Terminated due to issue with simulation step");
+      _terminate = true; _simulationRunning = false;
+    }
+    // Only save state if not terminated and the step returned OK
     if (!isTerminated()) {
       file_format::YarnRepr yarnPos = _parent->simulator()->getYarns();
       file_format::YarnRepr yarnVel = _parent->simulator()->getVelocityYarns();
@@ -115,8 +120,9 @@ void AnimationManager::runSimulation() {
 
       SPDLOG_INFO("> Done");
     }
-    else {
-      SPDLOG_INFO("> Early Terminated");
+    if (_parent->simulator()->isFinished()) {
+      SPDLOG_INFO("> Simulation converged to tolerance");
+      _terminate = true; _simulationRunning = false;
     }
   }
 }

@@ -27,6 +27,7 @@ BaseSimulator::BaseSimulator(file_format::YarnRepr _yarns,
   Q(flatten(_yarns.vertices)),
   dQ(Eigen::MatrixXd::Zero(3ll * nControlPoints, 1)),
   F(Eigen::MatrixXd::Zero(3ll * nControlPoints, 1)),
+  forceResidual(1e6),
   constraints(nControlPoints, &thread_pool),
   segmentLength(nControlPoints, 0),
   catmullRomLength(nControlPoints, 0),
@@ -128,8 +129,8 @@ file_format::YarnRepr BaseSimulator::getVelocityYarns() {
 ///////////////
 // Stepping
 #define WRITE_MATRIX(Q) writeMatrix(#Q"-" + std::to_string(numStep) + ".csv", Q);
-
-void BaseSimulator::step(const StateGetter& cancelled) {
+// Returns true is step was OK, false if we want to stop
+bool BaseSimulator::step(const StateGetter& cancelled) {
   EASY_FUNCTION();
   if (params.statistics) {
     statistics.clear();
@@ -156,11 +157,16 @@ void BaseSimulator::step(const StateGetter& cancelled) {
     if (cancelled()) break;
     this->postStep(cancelled);
 
+    if (foundNaN) return false;
   }
 
   if (params.statistics) {
     printStatistics();
   }
+  forceResidual = F.norm();
+  SPDLOG_INFO("* Force residual: {}", forceResidual);
+  if (forceResidual <= params.forceResidualTol) _finished = true;
+  return true;
 }
 
 void BaseSimulator::updateCollisionTree(const StateGetter& cancelled) {
@@ -449,6 +455,7 @@ bool BaseSimulator::applyApproxContactForce(size_t i, size_t j,
   }
 
   Eigen::Matrix3d A = Apq.transpose() * Apq;
+  A += Eigen::Matrix3d::Identity() * SIMPSON_EPS;
 
   // Store the ground truth calculated by Eigen
   // Compare it with Jacobi method later
@@ -456,6 +463,7 @@ bool BaseSimulator::applyApproxContactForce(size_t i, size_t j,
   if (params.statistics) {
     Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> solver(A);
     if (solver.info() != Eigen::Success) {
+      SPDLOG_ERROR("Error solving rotation matrix");
     }
     else {
       rotationGroundTruth = Apq * solver.operatorInverseSqrt();
