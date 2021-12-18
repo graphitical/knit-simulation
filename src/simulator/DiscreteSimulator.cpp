@@ -365,8 +365,10 @@ void DiscreteSimulator::applyGlobalDamping() {
       EIGEN_UNUSED_VARIABLE(thread_id)
 
       double v = pointAt(dQ, i).norm();
+      std::cout << v << std::endl;
+      if (isnan(v)) { return; }
       pointAt(dQ, i) *= std::max(0.0, v - params.kGlobalDamping) / v;
-      });
+    });
   }
 }
 

@@ -24,6 +24,7 @@ void KnitpurlExplorer::init(igl::opengl::glfw::Viewer *_viewer) {
         }
         igl::png::texture_from_file("knit.png", knit_tex);
         igl::png::texture_from_file("purl.png", purl_tex);
+        igl::png::texture_from_file("mat.png", mat_tex);
         knitting_textures_loaded = true;
     }
 }
@@ -33,14 +34,14 @@ void KnitpurlExplorer::draw_viewer_menu() {
     // float p = ImGui::GetStyle().FramePadding.x;
 
     if (ImGui::CollapsingHeader("Swatch Options", ImGuiTreeNodeFlags_DefaultOpen)) {
-        if (ImGui::DragInt("Swatch Width", &swatch_width, 4, 1, 12)) { swatch_generated = false; };
-        if (ImGui::DragInt("Swatch Height", &swatch_height, 4, 1, 12)) { swatch_generated = false;};
+        if (ImGui::DragInt("Swatch Width", &swatch_width, 4, 1, 12)) { swatch_generated = false; }
+        if (ImGui::DragInt("Swatch Height", &swatch_height, 4, 1, 12)) { swatch_generated = false; }
         ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(
             (float)textures[current_texture].color(0),
             (float)textures[current_texture].color(1),
             (float)textures[current_texture].color(2),
             (float)textures[current_texture].color(3)));
-        ImGui::Combo("", &current_texture, texture_names);
+        if (ImGui::Combo("", &current_texture, texture_names)) { swatch_generated = false; }
         ImGui::PopStyleColor();
         if (ImGui::Button("Generate Swatch", ImVec2(-1, 0))) {
             swatch = std::vector<std::vector<int>>(swatch_height, std::vector<int>(swatch_width, 0));
@@ -52,13 +53,21 @@ void KnitpurlExplorer::draw_viewer_menu() {
                 }
             }
             swatch_generated = true;
+            show_mat = false;
         }
         if (ImGui::Button("Save Swatch to .yarns", ImVec2(-1, 0))) {
-            yarns_file = igl::file_dialog_open();
-            path_prefix = yarns_file.substr(0, yarns_file.find_last_of("."));
-            swatch_to_knitout();
-            knitout_to_smobj();
-            smobj_to_yarns();
+            if (swatch_generated) {
+                yarns_file = igl::file_dialog_open();
+                path_prefix = yarns_file.substr(0, yarns_file.find_last_of("."));
+                swatch_to_knitout();
+                knitout_to_smobj();
+                smobj_to_yarns();
+            } else {
+                std::cerr << "no swatch yet!" << std::endl;
+            }
+        }
+        if (ImGui::Button("Show Material Properties", ImVec2(-1, 0))) {
+            show_mat = true;
         }
     }
 }
@@ -96,10 +105,10 @@ void KnitpurlExplorer::smobj_to_yarns() {
 
 void KnitpurlExplorer::draw_custom_window() {
     // Define next window position + size
-    ImGui::SetNextWindowPos(ImVec2(180.f * menu_scaling(), 0.f), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize(ImVec2((swatch_width + 1) * 40.f, (swatch_height + 1) * 40.f + 10.f), ImGuiCond_Always);
-    ImGui::Begin("Swatch", nullptr, ImGuiWindowFlags_NoSavedSettings);
     if (swatch_generated) {
+        ImGui::SetNextWindowPos(ImVec2(180.f * menu_scaling(), 0.f), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSize(ImVec2((swatch_width + 2) * 40.f, (swatch_height + 1) * 40.f + 10.f), ImGuiCond_Always);
+        ImGui::Begin("Swatch", nullptr, ImGuiWindowFlags_NoSavedSettings);
         for (int i = 0; i < swatch_height; i++) {
             ImGui::NewLine();
             for (int j = 0; j < swatch_width; j++) {
@@ -112,8 +121,15 @@ void KnitpurlExplorer::draw_custom_window() {
                 ImGui::SameLine();
             }
         }
+        ImGui::End();
     }
-    ImGui::End();
+    if (show_mat) {
+        ImGui::SetNextWindowPos(ImVec2(180.f * menu_scaling() + (swatch_width + 2) * 40.f, 0.f), ImGuiCond_Always);
+        ImGui::SetNextWindowSize(ImVec2(500.f, 300.f), ImGuiCond_Always);
+        ImGui::Begin("Material Properties", nullptr, ImGuiWindowFlags_NoSavedSettings);
+        ImGui::ImageButton((void*)(intptr_t)mat_tex, ImVec2(480.f, 270.f));
+        ImGui::End();
+    }
 }
 
 void KnitpurlExplorer::clear() {

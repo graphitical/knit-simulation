@@ -53,13 +53,14 @@ private:
     std::string yarns_file, path_prefix;
     std::vector<std::vector<int>> swatch;
     std::vector<std::string> lines;
-    int carrier = 3;
+    int carrier = 1;
     int sn = 50;
-    GLuint knit_tex, purl_tex;
+    GLuint knit_tex, purl_tex, mat_tex;
     std::vector<std::string> texture_names{};
     int current_texture = 0;
     bool knitting_textures_loaded = false;
     bool swatch_generated = false;
+    bool show_mat = false;
 };
 
 }

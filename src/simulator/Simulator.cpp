@@ -182,8 +182,8 @@ void Simulator::setUpConstraints() {
   //   addPinConstraint(p, pointAt(Q, p));
   // }
 
-  addPinConstraint(0, pointAt(Q, 0));
-  addPinConstraint(nControlPoints - 1, pointAt(Q, nControlPoints - 1));
+  // addPinConstraint(0, pointAt(Q, 0));
+  // addPinConstraint(nControlPoints - 1, pointAt(Q, nControlPoints - 1));
 }
 
 }  // namespace simulator
